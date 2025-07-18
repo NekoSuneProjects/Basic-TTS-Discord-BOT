@@ -113,6 +113,7 @@ let userPrefs = {};
 async function loadTtsConfigs() {
   try {
     await fs.mkdir(CONFIG_DIR, { recursive: true });
+    await fs.mkdir('audios', { recursive: true });
     const files = await fs.readdir(CONFIG_DIR);
     for (const file of files) {
       if (file.endsWith(".json")) {
