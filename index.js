@@ -37,6 +37,35 @@ const LANGUAGE_MAP = {
     'pl_PL': 'Polish (Poland)',
 };
 
+// Helper to update bot presence
+const setBotPresence = async (activity, type = ActivityType.Watching, url = null, client) => {
+  client.user.setPresence({
+    activities: [{ name: activity, type, url }],
+    status: "dnd",
+  });
+};
+
+// Rotate presence messages when offline
+const rotatePresenceMessages = (client) => {
+  const messages = [
+    `/help || RAWR! || IM A BIG CUTIE`,
+    `/help || Neko TTS BOT || MY MASTER NEKOSUNEVR IS A CUTIE!`,
+    `/help || Neko TTS BOT || NOTICE ME SENPAI!! UWU`,
+    `/help || NEKO BOT || Serving: ${client.guilds.cache.reduce((a, b) => a + b.memberCount, 0)} ${
+      client.guilds.cache.reduce((a, b) => a + b.memberCount, 0) > 1 ? "Users," : "User,"
+    }`,
+  ];
+
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i >= messages.length) {
+      clearInterval(interval);
+      return;
+    }
+    setBotPresence(messages[i], client);
+    i++;
+  }, 10000);
+};
 
 // Helper function to render a progress bar
 function renderProgress(filename, received, total) {
@@ -277,6 +306,10 @@ class TtsBot {
               ensureServerQueue(guild.id);
             }
             await saveTtsQueue();
+
+            // Fetch and set initial bot presence
+            rotatePresenceMessages(this.client);
+            setInterval(rotatePresenceMessages(this.client), 90000);
         });
         
         this.client.on('guildCreate', async (guild) => {
