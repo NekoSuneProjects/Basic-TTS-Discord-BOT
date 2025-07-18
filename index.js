@@ -1,13 +1,12 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const fs = require('fs').promises;
-const fsSync = require('fs'); // For stream extraction
+const chalk = require("chalk");
 const path = require('path');
 const { https } = require('follow-redirects');
 const { pipeline } = require('stream');
 const util = require('util');
 const pipelineAsync = util.promisify(pipeline);
 const os = require('os');
-const unzipper = require('unzipper'); // npm install unzipper
 const logger = console;
 const readline = require('readline');
 
@@ -236,12 +235,34 @@ class TtsBot {
     constructor(config) {
         this.config = config;
         this.client = new Client({
-            intents: [
-                GatewayIntentBits.Guilds,
-                GatewayIntentBits.GuildMessages,
-                GatewayIntentBits.MessageContent,
-                GatewayIntentBits.GuildVoiceStates,
-            ],
+          intents: [
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMembers, 
+            GatewayIntentBits.GuildModeration,
+            GatewayIntentBits.GuildEmojisAndStickers,
+            GatewayIntentBits.GuildIntegrations,
+            GatewayIntentBits.GuildWebhooks,
+            GatewayIntentBits.GuildInvites,
+            GatewayIntentBits.GuildPresences,
+            GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.GuildMessageReactions,
+            GatewayIntentBits.GuildMessageTyping,
+            GatewayIntentBits.DirectMessages,
+            GatewayIntentBits.DirectMessageReactions,
+            GatewayIntentBits.DirectMessageTyping,
+            GatewayIntentBits.MessageContent,
+            GatewayIntentBits.GuildScheduledEvents, 
+            GatewayIntentBits.GuildVoiceStates,
+          ], 
+          partials: [
+            Partials.User,
+            Partials.Channel,
+            Partials.GuildMember,
+            Partials.Message,
+            Partials.Reaction,
+            Partials.GuildScheduledEvent,
+            Partials.ThreadMember
+          ]
         });
         this.setupClient();
     }
@@ -315,3 +336,49 @@ async function startBots() {
 
 // Start all bots
 startBots();
+
+// ———————————————[Error Handling]———————————————
+process.on("unhandledRejection", (reason, p) => {
+
+   if (reason === "Error [INTERACTION_ALREADY_REPLIED]: The reply to this interaction has already been sent or deferred.") return;
+
+   console.log(chalk.gray("—————————————————————————————————"));
+   console.log(
+      chalk.white("["),
+      chalk.red.bold("AntiCrash"),
+      chalk.white("]"),
+      chalk.gray(" : "),
+      chalk.white.bold("Unhandled Rejection/Catch")
+   );
+   console.log(chalk.gray("—————————————————————————————————"));
+   console.log(reason, p);
+});
+process.on("uncaughtException", (err, origin) => {
+   console.log(chalk.gray("—————————————————————————————————"));
+   console.log(
+      chalk.white("["),
+      chalk.red.bold("AntiCrash"),
+      chalk.white("]"),
+      chalk.gray(" : "),
+      chalk.white.bold("Uncaught Exception/Catch")
+   );
+   console.log(chalk.gray("—————————————————————————————————"));
+   console.log(err, origin);
+});
+
+/*process.on("multipleResolves", (type, promise, reason) => {
+
+   if (reason === "Error: Cannot perform IP discovery - socket closed") return;
+   if (reason === "AbortError: The operation was aborted") return;
+
+   console.log(chalk.gray("—————————————————————————————————"));
+   console.log(
+      chalk.white("["),
+      chalk.red.bold("AntiCrash"),
+      chalk.white("]"),
+      chalk.gray(" : "),
+      chalk.white.bold("Multiple Resolves")
+   );
+   console.log(chalk.gray("—————————————————————————————————"));
+   console.log(type, promise, reason);
+});*/
