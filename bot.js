@@ -1,5 +1,4 @@
 const {
-  Client,
   SlashCommandBuilder,
   PermissionFlagsBits
 } = require("discord.js");
@@ -12,8 +11,7 @@ const {
 } = require("@discordjs/voice");
 const fs = require("fs").promises; // Fixed: Use .promises instead of .promisify
 const path = require("path");
-const { spawn, exec } = require("child_process");
-const util = require("util");
+const { spawn } = require("child_process");
 const readline = require("readline");
 const logger = console;
 
