@@ -38,7 +38,7 @@ const LANGUAGE_MAP = {
 };
 
 // Helper to update bot presence
-const setBotPresence = async (activity, type = ActivityType.Watching, url = null, client) => {
+const setBotPresence = async (activity, client, type = ActivityType.Watching, url = null) => {
   client.user.setPresence({
     activities: [{ name: activity, type, url }],
     status: "dnd",
