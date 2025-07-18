@@ -1,0 +1,22 @@
+{
+  "name": "discord-tts-bot",
+  "version": "1.0.0",
+  "description": "A Discord TTS bot with multiple instances, slash commands, and user-specific provider preferences using Piper TTS",
+  "main": "launcher.js",
+  "scripts": {
+    "start": "node launcher.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/voice": "^0.17.0",
+    "discord.js": "^14.19.3",
+    "follow-redirects": "^1.15.9",
+    "libsodium-wrappers": "^0.7.15",
+    "unzipper": "^0.12.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
