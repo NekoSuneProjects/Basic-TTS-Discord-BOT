@@ -349,7 +349,7 @@ async function registerCommands(client, botConfig) {
       }
 
       await interaction.deferReply();
-      const outputFile = `output_${provider}_${Date.now()}.wav`;
+      const outputFile = `audios/output_${provider}_${Date.now()}.wav`;
       const audioFile = await generateTts(text, provider, outputFile);
 
       await enqueueTtsAudio(audioFile, connection, interaction, logger, provider);
