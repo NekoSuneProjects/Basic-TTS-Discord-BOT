@@ -171,7 +171,7 @@ async function saveUserPrefs() {
 async function generateTts(
   text,
   provider,
-  outputFile = `output_${Date.now()}.wav`
+  outputFile = `audios/output_${Date.now()}.wav`
 ) {
   const config = ttsConfigs[provider];
   if (!config) {
