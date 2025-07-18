@@ -252,7 +252,7 @@ class TtsBot {
         this.client.on('ready', async () => {
             logger.info(`Bot ${this.config.botName} logged in as ${this.client.user.tag}`);
             await loadTtsQueue();
-            for (const guild of client.guilds.cache.values()) {
+            for (const guild of this.client.guilds.cache.values()) {
               ensureServerQueue(guild.id);
             }
             await saveTtsQueue();
