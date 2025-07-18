@@ -247,10 +247,28 @@ class TtsBot {
     }
 
     async setupClient() {
-        const { registerCommands } = require('./bot.js');
+        const { registerCommands, saveTtsQueue, ensureServerQueue, loadTtsQueue } = require('./bot.js');
         await registerCommands(this.client, this.config);
-        this.client.on('ready', () => {
+        this.client.on('ready', async () => {
             logger.info(`Bot ${this.config.botName} logged in as ${this.client.user.tag}`);
+            await loadTtsQueue();
+            for (const guild of client.guilds.cache.values()) {
+              ensureServerQueue(guild.id);
+            }
+            await saveTtsQueue();
+        });
+        
+        this.client.on('guildCreate', async (guild) => {
+          await loadTtsQueue();
+          ensureServerQueue(guild.id);
+          await saveTtsQueue();
+        });
+
+        this.client.on('guildDelete', async (guild) => {
+          await loadTtsQueue();
+          delete ttsQueue[guild.id];
+          delete isPlaying[guild.id];
+          await saveTtsQueue();
         });
         this.client.login(this.config.token).catch((error) => {
             logger.error(`Bot ${this.config.botName} login failed: ${error.message}`);

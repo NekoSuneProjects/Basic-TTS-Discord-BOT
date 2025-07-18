@@ -22,62 +22,61 @@ const USER_PREFS_FILE = "user_prefs.json";
 const TTS_QUEUE_FILE = "tts_queue.json";
 
 // Lock to prevent race conditions
-let isPlaying = false;
-let ttsQueue = [];
+let ttsQueue = {}; // { [serverId]: [ { audioPath, provider } ] }
+let isPlaying = {}; // { [serverId]: boolean }
 
 // Load the TTS queue from disk if available
 async function loadTtsQueue() {
   try {
     const data = await fs.readFile(TTS_QUEUE_FILE, 'utf8');
     ttsQueue = JSON.parse(data);
-  } catch (err) {
-    ttsQueue = [];
+  } catch {
+    ttsQueue = {};
   }
 }
 
-// Save the current TTS queue to disk
+// Save queues to disk
 async function saveTtsQueue() {
   await fs.writeFile(TTS_QUEUE_FILE, JSON.stringify(ttsQueue, null, 2));
 }
-// Enqueue new TTS audio
-async function enqueueTtsAudio(audioPath, connection, interaction, logger, provider) {
-  await loadTtsQueue(); // always refresh latest from disk
 
-  ttsQueue.push({ audioPath, provider });
-  await saveTtsQueue(); // Persist immediately
-
-  if (!isPlaying) {
-    playNext(connection, interaction, logger);
-  }
+// Ensure a queue exists for the server
+function ensureServerQueue(serverId) {
+  if (!ttsQueue[serverId]) ttsQueue[serverId] = [];
+  if (!isPlaying[serverId]) isPlaying[serverId] = false;
 }
-// Enqueue audio and start playing if idle
-async function enqueueTtsAudio(audioPath, connection, interaction, logger, provider) {
-  await loadTtsQueue(); // always refresh latest from disk
 
-  ttsQueue.push({ audioPath, provider });
+
+// Enqueue audio for a specific guild
+async function enqueueTtsAudio(serverId, audioPath, connection, interaction, logger, provider) {
+  await loadTtsQueue();
+  ensureServerQueue(serverId);
+
+  ttsQueue[serverId].push({ audioPath, provider });
   await saveTtsQueue();
 
-  if (!isPlaying) {
-    playNext(connection, interaction, logger);
+  if (!isPlaying[serverId]) {
+    playNext(serverId, connection, interaction, logger);
   }
 }
 
-// Play the next item in the queue
-async function playNext(connection, interaction, logger) {
-  await loadTtsQueue(); // always refresh latest from disk
+// Play next audio for a guild
+async function playNext(serverId, connection, interaction, logger) {
+  await loadTtsQueue();
+  ensureServerQueue(serverId);
 
-  if (ttsQueue.length === 0) {
-    isPlaying = false;
+  const queue = ttsQueue[serverId];
+  if (!queue || queue.length === 0) {
+    isPlaying[serverId] = false;
     return;
   }
 
-  isPlaying = true;
-  const { audioPath, provider } = ttsQueue[0]; // don't pop yet
+  const { audioPath, provider } = queue[0];
 
   if (!audioPath || !connection) {
-    ttsQueue.shift();
+    queue.shift();
     await saveTtsQueue();
-    return playNext(connection, interaction, logger);
+    return playNext(serverId, connection, interaction, logger);
   }
 
   const player = createAudioPlayer();
@@ -85,22 +84,24 @@ async function playNext(connection, interaction, logger) {
   connection.subscribe(player);
   player.play(resource);
 
+  isPlaying[serverId] = true;
+
   player.once(AudioPlayerStatus.Idle, async () => {
     await fs.unlink(audioPath).catch(() => {});
-    ttsQueue.shift();
+    queue.shift();
     await saveTtsQueue();
-    playNext(connection, interaction, logger);
+    playNext(serverId, connection, interaction, logger);
   });
 
-  player.on("error", async error => {
-    logger.error(`Audio player error: ${error.message}`);
-    interaction.followUp("Failed to play TTS audio.").catch(() => {});
-    ttsQueue.shift();
+  player.on('error', async error => {
+    logger.error(`Audio error for ${serverId}: ${error.message}`);
+    interaction.followUp("❌ TTS failed to play.").catch(() => {});
+    queue.shift();
     await saveTtsQueue();
-    playNext(connection, interaction, logger);
+    playNext(serverId, connection, interaction, logger);
   });
 
-  await interaction.followUp(`🔊 Playing TTS using ${provider}.`).catch(() => {});
+  await interaction.followUp(`🔊 Playing TTS for **${serverId}** using ${provider}.`).catch(() => {});
 }
 
 // Store TTS configurations and user preferences
@@ -408,4 +409,4 @@ async function registerCommands(client, botConfig) {
   });
 }
 
-module.exports = { registerCommands };
+module.exports = { registerCommands, saveTtsQueue, ensureServerQueue, loadTtsQueue };
