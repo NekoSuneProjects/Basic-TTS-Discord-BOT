@@ -116,32 +116,6 @@ async function runCommand(cmd, args, options = {}) {
   });
 }
 
-
-async function installPip(portablePythonDir, pythonExe) {
-  const getPipUrl = 'https://bootstrap.pypa.io/get-pip.py';
-  const getPipPath = path.join(portablePythonDir, 'get-pip.py');
-
-  // Download get-pip.py
-  await new Promise((resolve, reject) => {
-    const file = fsSync.createWriteStream(getPipPath);
-    https.get(getPipUrl, (res) => {
-      res.pipe(file);
-      file.on('finish', () => {
-        file.close(resolve);
-      });
-      file.on('error', reject);
-    }).on('error', reject);
-  });
-  logger.info('Downloaded get-pip.py');
-
-  // Run python.exe get-pip.py
-  await runCommand(pythonExe, [getPipPath]);
-  logger.info('Installed pip in portable Python');
-
-  // Remove get-pip.py after installation
-  await fs.unlink(getPipPath);
-}
-
 async function setupPiper() {
   try {
     const platform = os.platform();
