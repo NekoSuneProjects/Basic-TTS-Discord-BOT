@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, version: discordjsVersion, ActivityType } = require('discord.js');
 const fs = require('fs').promises;
 const chalk = require("chalk");
 const path = require('path');
