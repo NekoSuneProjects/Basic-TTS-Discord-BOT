@@ -352,7 +352,7 @@ async function registerCommands(client, botConfig) {
       const outputFile = `audios/output_${provider}_${Date.now()}.wav`;
       const audioFile = await generateTts(text, provider, outputFile);
 
-      await enqueueTtsAudio(audioFile, connection, interaction, logger, provider);
+      await enqueueTtsAudio(interaction.guild.id, audioFile, connection, interaction, logger, provider);
     }
 
     if (commandName === "settts") {
